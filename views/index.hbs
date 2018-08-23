@@ -1,0 +1,10 @@
+{{! Copyright (c) Mark Voortman - mark@voortman.name. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
+{{! Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
+<div class="jumbotron">
+  <h1>Portfolio Builder</h1>
+  {{#if user}}
+    <p>Please click on Builder in the menu above to get started.<br>For feedback or bugs please email <a href="mailto:mvoortman@pointpark.edu">mvoortman@pointpark.edu</a></p>
+  {{else}}
+    <a class="btn btn-primary btn-large" href="{{signInUrl}}">Click here to login</a>
+  {{/if}}
+</div>
