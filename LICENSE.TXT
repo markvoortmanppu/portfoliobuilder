@@ -1,4 +1,4 @@
-syllabusbuilder https://github.com/markvoortman/syllabusbuilder
+syllabusbuilder https://github.com/markvoortmanppu/syllabusbuilder
 node-tutorial https://github.com/jasonjoh/node-tutorial
 
 Copyright (c) Mark Voortman - mark@voortman.name
