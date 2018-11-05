@@ -1,0 +1,414 @@
+{{! Copyright (c) Mark Voortman - mark@voortman.name. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
+<h2 id="header">Portfolio</h2>
+<div id="menu"></div>
+<hr id="hr1">
+<div id="content"></div>
+<hr id="hr2">
+
+<script>
+ function save(alldata, cb) {
+   $.ajax({
+     type: "POST",
+     url: "/save_data",
+     data: {
+       data: JSON.stringify(alldata)
+     }
+   }).done(function(data) {
+     if (data.error) {
+       console.log(JSON.stringify(data.error));
+       alert(JSON.stringify(data.error));
+     }
+     else {
+       if (cb) {
+         cb();
+       }
+       else {
+         portfolios(alldata);
+       }
+     }
+   }).fail(fail);
+ }
+ 
+ function portfolios(alldata) {
+   $("#menu").empty();
+   $("#content").empty();
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("New");
+   a.click(function() {
+     selecttemplate(alldata);
+   });
+   if (!alldata.portfolios || !alldata.portfolios.length) {
+     $("#content").append("No portfolio found.");
+   }
+   else {
+     for (var i = 0; i < alldata.portfolios.length; i++) {
+       (function(i) {
+         if (i) {
+           $("#content").append("<hr>");
+         }
+         var a = $("<a>");
+         $("#content").append(a);
+         a.addClass("btn btn-outline-primary btn-sm");
+         a.attr("href", "javascript:");
+         a.append("Edit");
+         a.click(function() {
+           selecttemplate(alldata, alldata.portfolios[i]);
+         });
+         $("#content").append(" ");
+         var a = $("<a>");
+         $("#content").append(a);
+         a.addClass("btn btn-outline-danger btn-sm");
+         a.attr("href", "javascript:");
+         a.append("Delete");
+         a.click(function() {
+           if (confirm("Are you sure you want to delete this item?")) {
+             alldata.portfolios.splice(i, 1);
+             save(alldata);
+           }
+         });
+         var info = alldata.portfolios[i].info || {};
+         $("#content").append(" Portfolio created on " + info.CreationDate);
+       })(i);
+     }
+   }
+ }
+ 
+ function selecttemplate(alldata, portfolio) {
+   if (!portfolio) {
+     portfolio = {
+       info: {
+         CreationDate: new Date().toDateString()
+       }
+     };
+     if (!alldata.portfolios) {
+       alldata.portfolios = [];
+     }
+     alldata.portfolios.push(portfolio);
+   }
+   if (!alldata.info) {
+     alldata.info = {};
+   }
+   $("#menu").empty();
+   $("#content").empty();
+   if (portfolio.info.Template) {
+     goedit(alldata, portfolio);
+   }
+   else {
+     $.ajax({
+       type: "GET",
+       url: "/load_templates"
+     }).done(function(data) {
+       if (data.error) {
+         alert(data.error);
+       }
+       else {
+         for (var i = 0; i < data.templates.length; i++) {
+           (function(i) {
+             if (i) {
+               $("#content").append("<hr>");
+             }
+             var a = $("<a>");
+             $("#content").append(a);
+             a.addClass("btn btn-primary btn-sm");
+             a.attr("href", "javascript:");
+             a.append(data.templates[i].info.Name);
+             a.click(function() {
+               portfolio.info.Template = data.templates[i].id;
+               goedit(alldata, portfolio);
+             });
+           })(i);
+         }
+       }
+     });
+   }
+ }
+ 
+ function goedit(alldata, portfolio) {
+   $.ajax({
+     type: "GET",
+     url: "/load_templates"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       var template = null;
+       for (var i = 0; i < data.templates.length; i++) {
+         if (data.templates[i].id === portfolio.info.Template) {
+           template = data.templates[i].template;
+           break;
+         }
+       }
+       if (template === null) {
+         alert("Cannot find template!");
+       }
+       // fill in personal info
+       for (var key in alldata.info) {
+         var regexp = new RegExp("\{{"+key+"}}", "g");
+         template = template.replace(regexp, alldata.info[key]);
+       }
+       // fill in course info
+       if (portfolio.info) {
+         for (var key in portfolio.info) {
+           var regexp = new RegExp("\{{"+key+"}}", "g");
+           template = template.replace(regexp, portfolio.info[key]);
+         }
+       }
+       // extend template with schedule at the end
+       if (portfolio.info.DateFirstClass) {
+         if (template[template.length-2] !== "\n" && template[template.length-1] !== "\n") {
+           template += "\n\n";
+         }
+         else if (template[template.length-1] !== "\n") {
+           template += "\n";
+         }
+         var datefirstclass = portfolio.info.DateFirstClass;
+         var date = newDate(datefirstclass);
+         var duration = 15;
+         if (portfolio.info.CourseDuration === "8 Weeks") {
+           duration = 8;
+         }
+         var cnt = 0;
+         var thanksgiving = false;
+         while (cnt < duration - (duration === 8 && thanksgiving ? 1 : 0)) {
+           var datestr = (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear();
+           if (isThanksgivingWeek(date)) {
+             // skip the thanksgiving week
+             template += "### Thanksgiving Break (" + datestr + ")";
+             template += "\n";
+             thanksgiving = true;
+           }
+           else if (isSpringBreakWeek(date, newDate(datefirstclass))) {
+             // skip the spring break week
+             template += "### Spring Break (" + datestr + ")";
+             template += "\n";
+           }
+           else {
+             cnt++;
+             var regexp = new RegExp("\{{Week"+cnt+"Date}}", "g");
+             template = template.replace(regexp, (date.getMonth()+1)+"/"+date.getDate()+"/"+date.getFullYear());
+             template += "### Week " + cnt + ": \{{Week" + cnt + "Title}} (" + datestr + ")\n";
+             if (isLaborDay(date)) {
+               template += "**NOTE: CLASS DOES NOT MEET DUE TO LABOR DAY**\n";
+             }
+             if (isMLKDay(date)) {
+               template += "**NOTE: CLASS DOES NOT MEET DUE TO MARTIN LUTHER KING DAY**\n";
+             }
+             template += "\{{Week" + cnt + "Description}}\n"
+             template += "\n";
+           }
+           date = new Date(date.getFullYear(), date.getMonth(), date.getDate()+7);
+         }
+       }
+       if (!portfolio.fields) {
+         portfolio.fields = {};
+       }
+       var data = [];
+       var parts = template.split("\{{");
+       for (var i = 1; i < parts.length; i++) {
+         var property = parts[i].substr(0, parts[i].indexOf("}}"));
+         if (property.startsWith("Week") && property.endsWith("Date")) {
+           // do not add
+         }
+         else {
+           if (!portfolio.fields[property]) {
+             portfolio.fields[property] = "";
+           }
+           var idx = template.indexOf("\{{"+property+"}}");
+           var usetextarea = idx === 0 || (idx > 0 && template[idx-1] === "\n")
+           data.push({
+             property: property,
+             value: portfolio.fields[property],
+             usetextarea: usetextarea,
+             usefileupload: property.indexOf("File") !== -1
+           });
+         }
+       }
+       edit(alldata, portfolio, template, data, portfolio.fields, 0);
+     }
+   }).fail(fail);
+ }
+ 
+ function edit(alldata, portfolio, origtemplate, data, fields, idx) {
+   $("#menu").empty();
+   $("#content").empty();
+   $("#content").append('<div id="buttons"></div><div id="output"></div>');
+   
+   var a = $("<a>");
+   $("#menu").append(a);
+   a.addClass("btn btn-primary btn-sm");
+   a.attr("href", "javascript:");
+   a.append("Save");
+   a.click(function() {
+     save(alldata, function() {
+       portfolios(alldata);
+     });
+   });
+   
+   var template = origtemplate;
+   if (idx < 0) {
+     idx = data.length - 1;
+   }
+   if (idx >= data.length) {
+     idx = 0;
+   }
+   // replace other fields
+   for (var i = 0; i < data.length; i++) {
+     var entry = data[i];
+     var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+     template = template.replace(regexp, "<span id='entry"+i+"'></span>");
+   }
+   $("#output").empty();
+   var innerdiv = $("<div>");
+   $("#output").append(innerdiv);
+   innerdiv.css("padding", "10px");
+   innerdiv.append(marked(template, {breaks:true}));
+   for (var idx = 0; idx < data.length; idx++) {
+     (function(idx) {
+       $("#entry"+idx).empty();
+       
+       if (!data[idx].usefileupload) {
+         var input = $("<textarea>");
+         $("#entry"+idx).append(input);
+         input.addClass("form-control");
+         input.val(data[idx].value);
+         input.keyup(function() {
+           data[idx].value = input.val();
+           fields[data[idx].property] = input.val();
+         });
+         input.change(function() {
+           data[idx].value = input.val();
+           fields[data[idx].property] = input.val();
+         });
+         // auto resize textarea
+         var offset = input[0].offsetHeight - input[0].clientHeight;
+         var resizeTextarea = function(el) {
+           $(el).css("height", "auto").css("height", el.scrollHeight + offset);
+         };
+         input.on("keyup input", function() {
+           resizeTextarea(this);
+         });
+         resizeTextarea(input[0]);
+       }
+       else {
+         var status = $("<div>");
+         $("#entry"+idx).append(status);
+         var showStatus = function() {
+           status.empty();
+           if (fields[data[idx].property] && fields[data[idx].property].name) {
+             status.append(fields[data[idx].property].name + " (");
+             var a = $("<a>");
+             status.append(a);
+             a.append("delete");
+             a.attr("href", "javascript:");
+             a.css("color", "red");
+             status.append(")");
+             a.click(function() {
+               fields[data[idx].property] = "";
+               status.empty();
+             });
+           }
+         };
+         showStatus();
+         var progress = $("<progress>");
+         $("#entry"+idx).append(progress);
+         progress.hide();
+         var form = $("<form>");
+         $("#entry"+idx).append(form);
+         form.attr("enctype", "multipart/form-data");
+         var input = $("<input>");
+         form.append(input);
+         input.addClass("form-control");
+         input.attr("type", "file");
+         input.attr("name", "file");
+         input.attr("accept", "application/pdf");
+         input.change(function() {
+           if (input.val()) {
+             $.ajax({
+               url: "/fileupload",
+               type: "POST",
+               data: new FormData(form[0]),
+               cache: false,
+               contentType: false,
+               processData: false,
+               xhr: function() {
+                 var myXhr = $.ajaxSettings.xhr();
+                 if (myXhr.upload) {
+                   progress.show();
+                   myXhr.upload.addEventListener("progress", function(e) {
+                     if (e.lengthComputable) {
+                       progress.attr({
+                         value: e.loaded,
+                         max: e.total,
+                       });
+                     }
+                   }, false);
+                 }
+                 return myXhr;
+               }
+             }).done(function(tmpdata) {
+               if (tmpdata.error) {
+                 console.log(JSON.stringify(tmpdata.error));
+                 alert(JSON.stringify(tmpdata.error));
+               }
+               else {
+                 progress.hide();
+                 fields[data[idx].property] = {
+                   id: tmpdata.id,
+                   name: tmpdata.name
+                 };
+                 save(alldata, function() {
+                   //status.empty();
+                   //status.append(tmpdata.name);
+                   showStatus();
+                 });
+                 input.val("");
+               }
+             }).fail(fail);
+           }
+         });
+       }
+     })(idx);
+   }
+ }
+ 
+ function print(alldata, portfolio, origtemplate, data, fields) {
+   $("#header").remove();
+   $("#menu").remove();
+   $("#hr1").remove();
+   $("#hr2").remove();
+   $("#content").empty();
+   $("#content").append('<div id="buttons"></div><div id="output"></div>');
+   
+   var template = origtemplate;
+   
+   // replace other fields
+   for (var i = 0; i < data.length; i++) {
+     var entry = data[i];
+     var regexp = new RegExp("\{{"+entry.property+"}}", "g");
+     template = template.replace(regexp, entry.value?entry.value:"");
+   }
+   $("#output").empty();
+   var innerdiv = $("<div>");
+   $("#output").append(innerdiv);
+   innerdiv.css("padding", "10px");
+   innerdiv.append(marked(template, {breaks:true}));
+ }
+ 
+ window.onload = function() {
+   $.ajax({
+     type: "GET",
+     url: "/load_data"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       portfolios(data);
+     }
+   }).fail(fail);
+ }
+</script>

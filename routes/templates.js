@@ -3,9 +3,9 @@ var express = require("express");
 var router = express.Router();
 var authHelper = require("../helpers/auth");
 
-/* GET template page. */
+/* GET templates page. */
 router.get("/", async function(req, res, next) {
-  let parms = { title: "Template", active: { template: true } };
+  let parms = { title: "Templates", active: { templates: true } };
 
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userName = req.cookies.graph_user_name;
@@ -22,7 +22,7 @@ router.get("/", async function(req, res, next) {
     //parms.debug = parms.signInUrl;
   }
 
-  res.render("template", parms);
+  res.render("templates", parms);
 });
 
 module.exports = router;

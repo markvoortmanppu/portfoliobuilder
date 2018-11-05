@@ -13,8 +13,8 @@ require("dotenv").config();
 
 var index = require("./routes/index");
 var authorize = require("./routes/authorize");
-var builder = require("./routes/builder");
-var template = require("./routes/template");
+var portfolio = require("./routes/portfolio");
+var templates = require("./routes/templates");
 
 var authHelper = require("./helpers/auth");
 
@@ -35,15 +35,15 @@ app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", index);
 app.use("/authorize", authorize);
-app.use("/builder", builder);
-app.use("/template", template);
+app.use("/portfolio", portfolio);
+app.use("/templates", templates);
 
-app.post("/save_template", async function(req, res, next) {
+app.post("/save_templates", async function(req, res, next) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userAdmin = req.cookies.graph_user_admin;
   if (accessToken && userAdmin) {
     res.setHeader("Content-Type", "application/json");
-    fs.writeFile("data/template.json", req.body.data+"\n", "utf8", function(err) {
+    fs.writeFile("data/templates.json", req.body.data+"\n", "utf8", function(err) {
       res.send(JSON.stringify({
         error: err
       }));
@@ -51,19 +51,25 @@ app.post("/save_template", async function(req, res, next) {
   }
 });
 
-app.get("/load_template", async function(req, res, next) {
+async function loadTemplates(req, res, cb) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
     res.setHeader("Content-Type", "application/json");
-    fs.readFile("data/template.json", "utf8", function(err, templatestr) {
-      var tmp = err ? {} : JSON.parse(templatestr);
+    fs.readFile("data/templates.json", "utf8", function(err, templatesstr) {
+      var tmp = err ? {} : JSON.parse(templatesstr);
       if (err && err.code !== "ENOENT") {
         tmp.error = err;
       }
-      res.send(tmp);
+      cb(tmp);
     });
   }
+}
+
+app.get("/load_templates", async function(req, res, next) {
+  loadTemplates(req, res, function(data) {
+    res.send(data);
+  });
 });
 
 app.post("/save_data", async function(req, res, next) {
@@ -103,6 +109,7 @@ app.post("/fileupload", async function(req, res, next) {
   if (accessToken && userEmail) {
     var form = new formidable.IncomingForm();
     form.parse(req, function(err, fields, files) {
+      console.log(files);
       if (err) {
         res.setHeader("Content-Type", "application/json");
         res.send(JSON.stringify({

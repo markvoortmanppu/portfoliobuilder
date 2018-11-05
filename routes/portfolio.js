@@ -3,9 +3,9 @@ var express = require("express");
 var router = express.Router();
 var authHelper = require("../helpers/auth");
 
-/* GET builder page. */
+/* GET portfolio page. */
 router.get("/", async function(req, res, next) {
-  let parms = { title: "Builder", active: { builder: true } };
+  let parms = { title: "Portfolio", active: { portfolio: true } };
 
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
   const userName = req.cookies.graph_user_name;
@@ -22,7 +22,7 @@ router.get("/", async function(req, res, next) {
     //parms.debug = parms.signInUrl;
   }
 
-  res.render("builder", parms);
+  res.render("portfolio", parms);
 });
 
 module.exports = router;
