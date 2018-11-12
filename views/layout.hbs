@@ -38,6 +38,9 @@
               <a class="nav-link" href="/portfolio">Portfolio</a>
             </li>
             {{#if admin}}
+              <li class="nav-item{{#if active.submissions}} active{{/if}}">
+                <a class="nav-link" href="/submissions">Submissions</a>
+              </li>
               <li class="nav-item{{#if active.templates}} active{{/if}}">
                 <a class="nav-link" href="/templates">Templates</a>
               </li>

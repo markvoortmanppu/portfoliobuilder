@@ -14,6 +14,7 @@ require("dotenv").config();
 var index = require("./routes/index");
 var authorize = require("./routes/authorize");
 var portfolio = require("./routes/portfolio");
+var submissions = require("./routes/submissions");
 var templates = require("./routes/templates");
 
 var authHelper = require("./helpers/auth");
@@ -36,6 +37,7 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use("/", index);
 app.use("/authorize", authorize);
 app.use("/portfolio", portfolio);
+app.use("/submissions", submissions);
 app.use("/templates", templates);
 
 app.post("/save_templates", async function(req, res, next) {
@@ -74,8 +76,12 @@ app.get("/load_templates", async function(req, res, next) {
 
 app.post("/save_data", async function(req, res, next) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
-  const userEmail = req.cookies.graph_user_email;
+  var userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
+    const userAdmin = req.cookies.graph_user_admin;
+    if (userAdmin && req.query.email) {
+      userEmail = req.query.email;
+    }
     res.setHeader("Content-Type", "application/json");
     fs.writeFile("data/" + userEmail + ".json", req.body.data+"\n", "utf8", function(err) {
       res.send(JSON.stringify({
@@ -87,8 +93,12 @@ app.post("/save_data", async function(req, res, next) {
 
 app.get("/load_data", async function(req, res, next) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
-  const userEmail = req.cookies.graph_user_email;
+  var userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
+    const userAdmin = req.cookies.graph_user_admin;
+    if (userAdmin && req.query.email) {
+      userEmail = req.query.email;
+    }
     res.setHeader("Content-Type", "application/json");
     fs.readFile("data/" + userEmail + ".json", "utf8", function(err, templatestr) {
       var tmp = err ? {} : JSON.parse(templatestr);
@@ -98,6 +108,31 @@ app.get("/load_data", async function(req, res, next) {
       if (!tmp.email) {
         tmp.email = userEmail;
       }
+      res.send(tmp);
+    });
+  }
+});
+
+app.get("/load_submissions", async function(req, res, next) {
+  const accessToken = await authHelper.getAccessToken(req.cookies, res);
+  const userEmail = req.cookies.graph_user_email;
+  if (accessToken && userEmail) {
+    res.setHeader("Content-Type", "application/json");
+    fs.readdir("data/", function(err, items) {
+      var tmp = {};
+      if (err && err.code !== "ENOENT") {
+        tmp.error = err;
+      }
+      if (!tmp.email) {
+        tmp.email = userEmail;
+      }
+      tmp.submissions = [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].endsWith("@pointpark.edu.json")) {
+          tmp.submissions.push(items[i]);
+        }
+      }
+      tmp.submissions.sort();
       res.send(tmp);
     });
   }

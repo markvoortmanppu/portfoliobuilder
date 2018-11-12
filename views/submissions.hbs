@@ -1,0 +1,36 @@
+{{! Copyright (c) Mark Voortman - mark@voortman.name. All rights reserved. Licensed under the MIT license. See LICENSE.txt in the project root for license information.}}
+<h2 id="header">Portfolio</h2>
+<div id="menu"></div>
+<hr id="hr1">
+<div id="content"></div>
+<hr id="hr2">
+
+<script>
+ window.onload = function() {
+   $.ajax({
+     type: "GET",
+     url: "/load_submissions"
+   }).done(function(data) {
+     if (data.error) {
+       alert(data.error);
+     }
+     else {
+       $("#content").empty();
+       for (var i = 0; i < data.submissions.length; i++) {
+         (function(i) {
+           if (i) {
+             $("#content").append("<hr>");
+           }
+           var email = data.submissions[i].split(".json")[0];
+           var a = $("<a>");
+           $("#content").append(a);
+           a.addClass("btn btn-primary btn-sm");
+           a.attr("href", "portfolio?email=" + email);
+           a.append(email);
+           $("#content").append("<br>");
+         })(i);
+       }
+     }
+   }).fail(fail);
+ }
+</script>
