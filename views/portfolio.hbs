@@ -302,7 +302,12 @@
              input.show();
            }
            else {
-             status.append(fields[data[idx].property].name + " (");
+             var a = $("<a>");
+             status.append(a);
+             a.append(fields[data[idx].property].name);
+             a.attr("href", "files/" + fields[data[idx].property].id + "/" + fields[data[idx].property].name + (!EMAIL ? "" : "?email=" + EMAIL));
+             a.attr("target", "_blank");
+             status.append(" (");
              var a = $("<a>");
              status.append(a);
              a.append("delete");
@@ -333,7 +338,7 @@
          input.change(function() {
            if (input.val()) {
              $.ajax({
-               url: "/fileupload",
+               url: "/fileupload" + (!EMAIL ? "" : "?email=" + EMAIL),
                type: "POST",
                data: new FormData(form[0]),
                cache: false,

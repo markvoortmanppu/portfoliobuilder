@@ -140,11 +140,14 @@ app.get("/load_submissions", async function(req, res, next) {
 
 app.post("/fileupload", async function(req, res, next) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
-  const userEmail = req.cookies.graph_user_email;
+  var userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
+    const userAdmin = req.cookies.graph_user_admin;
+    if (userAdmin && req.query.email) {
+      userEmail = req.query.email;
+    }
     var form = new formidable.IncomingForm();
     form.parse(req, function(err, fields, files) {
-      console.log(files);
       if (err) {
         res.setHeader("Content-Type", "application/json");
         res.send(JSON.stringify({
@@ -166,12 +169,18 @@ app.post("/fileupload", async function(req, res, next) {
   }
 });
 
-app.get("/files/", async function(req, res, next) {
+app.get("/files/*", async function(req, res, next) {
   const accessToken = await authHelper.getAccessToken(req.cookies, res);
-  const userEmail = req.cookies.graph_user_email;
+  var userEmail = req.cookies.graph_user_email;
   if (accessToken && userEmail) {
-    console.log(req.url);
-    //res.send("data/" + userEmail + ":" + ...);
+    const userAdmin = req.cookies.graph_user_admin;
+    if (userAdmin && req.query.email) {
+      userEmail = req.query.email;
+    }
+    var parts = req.url.split("?")[0].split("/");
+    var id = decodeURIComponent(parts[2]);
+    var name = decodeURIComponent(parts[3]);
+    res.sendFile(__dirname + "/data/" + userEmail + ":" + id + ":" + name);
   }
 });
 
