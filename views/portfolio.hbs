@@ -6,8 +6,8 @@
 <hr id="hr2">
 
 <script>
- var URLPARAMS = new URLSearchParams(window.location.search);
- var EMAIL = URLPARAMS.get("email") || "";
+ var URLPARAMS = null;
+ var EMAIL = null;
  
  function save(alldata, cb) {
    $.ajax({
@@ -49,7 +49,7 @@
    else {
    $.ajax({
      type: "GET",
-     url: "/load_templates"
+     url: "/load_templates?" + Date.now()
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
@@ -125,7 +125,7 @@
    else {
      $.ajax({
        type: "GET",
-       url: "/load_templates"
+       url: "/load_templates?" + Date.now()
      }).done(function(data) {
        if (data.error) {
          alert(data.error);
@@ -155,7 +155,7 @@
  function goedit(alldata, portfolio) {
    $.ajax({
      type: "GET",
-     url: "/load_templates"
+     url: "/load_templates?" + Date.now()
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
@@ -408,12 +408,14 @@
  }
  
  window.onload = function() {
+   URLPARAMS = new URLSearchParams(window.location.search);
+   EMAIL = URLPARAMS.get("email") || "";
    if (EMAIL) {
      $("#header").append(" (" + EMAIL + ")");
    }
    $.ajax({
      type: "GET",
-     url: "/load_data?email=" + EMAIL
+     url: "/load_data?email=" + EMAIL + "&" + Date.now()
    }).done(function(data) {
      if (data.error) {
        alert(data.error);
