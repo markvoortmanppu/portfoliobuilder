@@ -47,58 +47,57 @@
      $("#content").append("Please click on New above to create a portfolio.");
    }
    else {
-   $.ajax({
-     type: "GET",
-     url: "/load_templates?" + Date.now()
-   }).done(function(data) {
-     if (data.error) {
-       alert(data.error);
-     }
-     else {
-     $("#content").append("<b>IMPORTANT</b>: Please click on <b>Edit</b> below to continue working on your portfolio.");
-     $("#content").append("<hr>");
-     for (var i = 0; i < alldata.portfolios.length; i++) {
-       (function(i) {
-         if (i) {
-           $("#content").append("<hr>");
+     $.ajax({
+       type: "GET",
+       url: "/load_templates?" + Date.now()
+     }).done(function(data) {
+       if (data.error) {
+         alert(data.error);
+       }
+       else {
+         $("#content").append("<b>IMPORTANT</b>: Please click on <b>Edit</b> below to continue working on your portfolio.");
+         $("#content").append("<hr>");
+         for (var i = 0; i < alldata.portfolios.length; i++) {
+           (function(i) {
+             if (i) {
+               $("#content").append("<hr>");
+             }
+             var a = $("<a>");
+             $("#content").append(a);
+             a.addClass("btn btn-outline-primary btn-sm");
+             a.attr("href", "javascript:");
+             a.append("Edit");
+             a.click(function() {
+               selecttemplate(alldata, alldata.portfolios[i]);
+             });
+             $("#content").append(" ");
+             var a = $("<a>");
+             $("#content").append(a);
+             a.addClass("btn btn-outline-danger btn-sm");
+             a.attr("href", "javascript:");
+             a.append("Delete");
+             a.click(function() {
+               if (confirm("Are you sure you want to delete this item?")) {
+                 alldata.portfolios.splice(i, 1);
+                 save(alldata);
+               }
+             });
+             var info = alldata.portfolios[i].info || {};
+             var template = null;
+             for (var j = 0; j < data.templates.length; j++) {
+               if (data.templates[j].id === alldata.portfolios[i].info.Template) {
+                 template = data.templates[j];
+                 break;
+               }
+             }
+             if (template === null) {
+               alert("Cannot find template!");
+             }
+             $("#content").append(" " + template.info.Name + " created on " + info.CreationDate);
+           })(i);
          }
-         var a = $("<a>");
-         $("#content").append(a);
-         a.addClass("btn btn-outline-primary btn-sm");
-         a.attr("href", "javascript:");
-         a.append("Edit");
-         a.click(function() {
-           selecttemplate(alldata, alldata.portfolios[i]);
-         });
-         $("#content").append(" ");
-         var a = $("<a>");
-         $("#content").append(a);
-         a.addClass("btn btn-outline-danger btn-sm");
-         a.attr("href", "javascript:");
-         a.append("Delete");
-         a.click(function() {
-           if (confirm("Are you sure you want to delete this item?")) {
-             alldata.portfolios.splice(i, 1);
-             save(alldata);
-           }
-         });
-         var info = alldata.portfolios[i].info || {};
-         var template = null;
-         for (var i = 0; i < data.templates.length; i++) {
-           if (data.templates[i].id === alldata.portfolios[i].info.Template) {
-             template = data.templates[i];
-             break;
-           }
-         }
-         if (template === null) {
-           alert("Cannot find template!");
-         }
-         $("#content").append(" " + template.info.Name + " created on " + info.CreationDate);
-       })(i);
-     }
-
-}
-});
+       }
+     });
    }
  }
  
