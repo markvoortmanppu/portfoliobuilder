@@ -55,6 +55,8 @@
          alert(data.error);
        }
        else {
+         $("#content").append("<b>Portfolios for Fall 2018 are due on December 20.</b>");
+         $("#content").append("<hr>");
          $("#content").append("<b>IMPORTANT</b>: Please click on <b>Edit</b> below to continue working on your portfolio.");
          $("#content").append("<hr>");
          for (var i = 0; i < alldata.portfolios.length; i++) {
