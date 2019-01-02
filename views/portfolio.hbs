@@ -335,9 +335,14 @@
          input.addClass("form-control");
          input.attr("type", "file");
          input.attr("name", "file");
-         input.attr("accept", "application/pdf");
+         input.attr("accept", ".pdf,application/pdf");
          input.change(function() {
            if (input.val()) {
+             if (!input.val().toLowerCase().endsWith(".pdf")) {
+               alert("Only PDF files are supported!");
+               input.val("");
+               return;
+             }
              $.ajax({
                url: "/fileupload" + (!EMAIL ? "" : "?email=" + EMAIL),
                type: "POST",
