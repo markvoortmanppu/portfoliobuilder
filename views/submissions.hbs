@@ -21,12 +21,17 @@
            if (i) {
              $("#content").append("<hr>");
            }
-           var email = data.submissions[i].split(".json")[0];
            var a = $("<a>");
            $("#content").append(a);
            a.addClass("btn btn-primary btn-sm");
+           var email = data.submissions[i].email;
            a.attr("href", "portfolio?email=" + email);
-           a.append(email);
+           var status = "not submitted";
+           var lastsubmission = data.submissions[i].lastsubmission;
+           if (lastsubmission) {
+             status = "last submitted on " + new Date(lastsubmission).toLocaleDateString();
+           }
+           a.append(email + " (" + status + ")");
            $("#content").append("<br>");
          })(i);
        }

@@ -127,13 +127,45 @@ app.get("/load_submissions", async function(req, res, next) {
         tmp.email = userEmail;
       }
       tmp.submissions = [];
+      var cnt = 0;
       for (var i = 0; i < items.length; i++) {
-        if (items[i].endsWith("@pointpark.edu.json")) {
-          tmp.submissions.push(items[i]);
-        }
+        (function(i) {
+          if (items[i].endsWith("@pointpark.edu.json")) {
+            cnt++;
+            fs.readFile("data/" + items[i], "utf8", function(err, userstr) {
+              var userdata = err ? null : JSON.parse(userstr);
+              if (err && err.code !== "ENOENT") {
+                // do nothing
+              }
+              else {
+                var lastsubmission = null;
+                if (userdata.portfolios) {
+                  for (var j = 0; j < userdata.portfolios.length; j++) {
+                    var portfolio = userdata.portfolios[j];
+                    if (portfolio.submitted) {
+                      lastsubmission = Math.max.apply(null, portfolio.submitted);
+                    }
+                  }
+                }
+                tmp.submissions.push({
+                  email: items[i].split(".json")[0],
+                  lastsubmission: lastsubmission
+                });
+              }
+              cnt--;
+              if (cnt === 0) {
+                tmp.submissions.sort(function(a, b) {
+                  return b.lastsubmission - a.lastsubmission;
+                });
+                res.send(tmp);
+              }
+            });
+          }
+        })(i);
       }
-      tmp.submissions.sort();
-      res.send(tmp);
+      if (cnt === 0) {
+        res.send(tmp);
+      }
     });
   }
 });
