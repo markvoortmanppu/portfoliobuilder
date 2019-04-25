@@ -130,7 +130,7 @@ app.get("/load_submissions", async function(req, res, next) {
       var cnt = 0;
       for (var i = 0; i < items.length; i++) {
         (function(i) {
-          if (items[i].endsWith("@pointpark.edu.json")) {
+          if (items[i].endsWith("@pointpark.edu.json") || items[i].endsWith("@pointpark.onmicrosoft.com.json")) {
             cnt++;
             fs.readFile("data/" + items[i], "utf8", function(err, userstr) {
               var userdata = err ? null : JSON.parse(userstr);
