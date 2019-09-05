@@ -138,10 +138,20 @@ app.get("/load_submissions", async function(req, res, next) {
                 // do nothing
               }
               else {
+                var firstname = "";
+                var lastname = "";
                 var lastsubmission = null;
                 if (userdata.portfolios) {
                   for (var j = 0; j < userdata.portfolios.length; j++) {
                     var portfolio = userdata.portfolios[j];
+                    if (portfolio.fields) {
+                      if (portfolio.fields.FirstName) {
+                        firstname = portfolio.fields.FirstName;
+                      }
+                      if (portfolio.fields.LastName) {
+                        lastname = portfolio.fields.LastName;
+                      }
+                    }
                     if (portfolio.submitted) {
                       lastsubmission = Math.max.apply(null, portfolio.submitted);
                     }
@@ -149,6 +159,8 @@ app.get("/load_submissions", async function(req, res, next) {
                 }
                 tmp.submissions.push({
                   email: items[i].split(".json")[0],
+                  firstname: firstname,
+                  lastname: lastname,
                   lastsubmission: lastsubmission
                 });
               }

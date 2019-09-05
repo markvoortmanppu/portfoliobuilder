@@ -26,12 +26,15 @@
            a.addClass("btn btn-primary btn-sm");
            var email = data.submissions[i].email;
            a.attr("href", "portfolio?email=" + email);
+           var firstname = data.submissions[i].firstname;
+           var lastname = data.submissions[i].lastname;
            var status = "not submitted";
            var lastsubmission = data.submissions[i].lastsubmission;
            if (lastsubmission) {
              status = "last submitted on " + new Date(lastsubmission).toLocaleDateString();
            }
-           a.append(email + " (" + status + ")");
+           var name = (firstname?firstname+" ":"") + (lastname?lastname+" ":"");
+           a.append((name?name+" - ":"") + email + " (" + status + ")");
            $("#content").append("<br>");
          })(i);
        }
