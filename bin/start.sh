@@ -13,6 +13,5 @@ mkdir -p tmp
 
 # redirect output to log and save pid
 {
-./bin/keeprunning.sh /usr/local/bin/node ./bin/www
-#echo $! > tmp/pid
+./bin/keeprunning.sh /usr/local/bin/nodemon --ignore data/ ./bin/www < /dev/null
 } >> log/$DATE.txt 2>&1
