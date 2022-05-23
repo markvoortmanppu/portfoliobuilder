@@ -198,6 +198,12 @@ app.post("/fileupload", async function(req, res, next) {
           error: err
         }));
       }
+      else if (!files.file.path) {
+        res.setHeader("Content-Type", "application/json");
+        res.send(JSON.stringify({
+          error: "Invalid file or file path"
+        }));
+      }
       else {
         var id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         fs.rename(files.file.path, "data/" + userEmail + ":" + id + ":" + files.file.name, function(err) {
